@@ -190,7 +190,8 @@ func generateStreamUpstream(upstream *conf_v1alpha1.Upstream, upstreamNamer *ups
 	}
 
 	return version2.StreamUpstream{
-		Name:    name,
-		Servers: upsServers,
+		Name:                name,
+		Servers:             upsServers,
+		LoadBalancingMethod: upstream.LoadBalancingMethod,
 	}
 }

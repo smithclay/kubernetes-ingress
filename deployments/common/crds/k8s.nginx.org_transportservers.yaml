@@ -113,6 +113,8 @@ spec:
                             type: integer
                           timeout:
                             type: string
+                      loadBalancingMethod:
+                        type: string
                       maxFails:
                         type: integer
                       name:
