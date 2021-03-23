@@ -168,6 +168,7 @@ name: secure-app
 service: secure-app
 port: 8443
 maxFails: 3
+maxConnections: 100
 failTimeout: 30s
 ```
 
@@ -193,6 +194,10 @@ failTimeout: 30s
      - Yes
    * - ``maxFails``
      - Sets the `number <https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#max_fails>`_ of unsuccessful attempts to communicate with the server that should happen in the duration set by the failTimeout parameter to consider the server unavailable. The default ``1``.
+     - ``int``
+     - No
+   * - ``maxConnections``
+     - Sets the `number <https://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#max_conns>`_ of maximum connections to the proxied server. Default value is zero, meaning there is no limit. The default is ``0``.
      - ``int``
      - No
    * - ``failTimeout``

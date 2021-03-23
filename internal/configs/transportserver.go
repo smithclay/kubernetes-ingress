@@ -169,6 +169,7 @@ func generateStreamUpstream(upstream *conf_v1alpha1.Upstream, upstreamNamer *ups
 
 	name := upstreamNamer.GetNameForUpstream(upstream.Name)
 	maxFails := generateIntFromPointer(upstream.MaxFails, 1)
+	maxConnections := generateIntFromPointer(upstream.MaxConnections, 0)
 	failTimeout := generateTimeWithDefault(upstream.FailTimeout, "10s")
 
 	for _, e := range endpoints {
@@ -183,9 +184,10 @@ func generateStreamUpstream(upstream *conf_v1alpha1.Upstream, upstreamNamer *ups
 
 	if !isPlus && len(endpoints) == 0 {
 		upsServers = append(upsServers, version2.StreamUpstreamServer{
-			Address:     nginxNonExistingUnixSocket,
-			MaxFails:    maxFails,
-			FailTimeout: failTimeout,
+			Address:        nginxNonExistingUnixSocket,
+			MaxFails:       maxFails,
+			FailTimeout:    failTimeout,
+			MaxConnections: maxConnections,
 		})
 	}
 
