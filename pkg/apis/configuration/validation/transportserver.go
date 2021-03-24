@@ -208,6 +208,7 @@ func validateLoadBalancingMethod(method string, fieldPath *field.Path, isPlus bo
 }
 
 var nginxStreamLoadBalanceValidInput = map[string]bool{
+	"round_robin":           true,
 	"least_conn":            true,
 	"random":                true,
 	"random two":            true,
@@ -215,29 +216,27 @@ var nginxStreamLoadBalanceValidInput = map[string]bool{
 }
 
 var nginxPlusStreamLoadBalanceValidInput = map[string]bool{
-	"least_conn":                       true,
-	"random":                           true,
-	"random two":                       true,
-	"random two least_conn":            true,
-	"random two least_time":            true,
-	"random two least_time=connect":    true,
-	"random two least_time=first_byte": true,
-	"random two least_time=last_byte":  true,
-	"random least_conn":                true,
-	"random least_time":                true,
-	"random least_time=connect":        true,
-	"random least_time=first_byte":     true,
-	"random least_time=last_byte":      true,
-	"least_time connect":               true,
-	"least_time first_byte":            true,
-	"least_time last_byte":             true,
-	"least_time last_byte inflight":    true,
+	"round_robin":                   true,
+	"least_conn":                    true,
+	"random":                        true,
+	"random two":                    true,
+	"random two least_conn":         true,
+	"random least_conn":             true,
+	"least_time connect":            true,
+	"least_time first_byte":         true,
+	"least_time last_byte":          true,
+	"least_time last_byte inflight": true,
 }
 
 func validateHashLoadBalancingMethod(method string) error {
 	keyWords := strings.Split(method, " ")
 	if len(keyWords) > 0 && keyWords[0] == "hash" {
 		if len(keyWords) == 2 || (len(keyWords) == 3 && keyWords[2] == "consistent") {
+			value := keyWords[1]
+			if !escapedStringsFmtRegexp.MatchString(value) {
+				return fmt.Errorf("invalid value for hash: %v", validation.RegexError(escapedStringsErrMsg, escapedStringsFmt))
+			}
+
 			return nil
 		}
 	}

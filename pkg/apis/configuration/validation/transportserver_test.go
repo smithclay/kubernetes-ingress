@@ -280,11 +280,11 @@ func TestValidateTransportServerLoadBalancingMethod(t *testing.T) {
 		{
 			method:   "random two least_time",
 			isPlus:   true,
-			hasError: false,
+			hasError: true,
 		}, {
 			method:   "random two least_time=connect",
 			isPlus:   true,
-			hasError: false,
+			hasError: true,
 		},
 	}
 

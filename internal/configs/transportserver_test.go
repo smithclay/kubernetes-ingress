@@ -112,6 +112,7 @@ func TestGenerateTransportServerConfigForTCPSnippets(t *testing.T) {
 					ResourceNamespace: "default",
 					Service:           "tcp-app-svc",
 				},
+				LoadBalancingMethod: "random two least_conn",
 			},
 		},
 		Server: version2.StreamServer{
@@ -196,6 +197,7 @@ func TestGenerateTransportServerConfigForTCP(t *testing.T) {
 					ResourceNamespace: "default",
 					Service:           "tcp-app-svc",
 				},
+				LoadBalancingMethod: "random two least_conn",
 			},
 		},
 		Server: version2.StreamServer{
@@ -279,6 +281,7 @@ func TestGenerateTransportServerConfigForTLSPasstrhough(t *testing.T) {
 					ResourceNamespace: "default",
 					Service:           "tcp-app-svc",
 				},
+				LoadBalancingMethod: "random two least_conn",
 			},
 		},
 		Server: version2.StreamServer{
@@ -368,6 +371,7 @@ func TestGenerateTransportServerConfigForUDP(t *testing.T) {
 					ResourceNamespace: "default",
 					Service:           "udp-app-svc",
 				},
+				LoadBalancingMethod: "random two least_conn",
 			},
 		},
 		Server: version2.StreamServer{

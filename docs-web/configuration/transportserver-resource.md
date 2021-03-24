@@ -206,6 +206,7 @@ loadBalancingMethod: least_conn
      - No
    * - ``loadBalancingMethod``
      - The method used to load balance the upstream servers. By default, connections are distributed between the servers using a weighted round-robin balancing method. See the `upstream <http://nginx.org/en/docs/stream/ngx_stream_upstream_module.html#upstream>`_ section for available methods and their details.
+     - ``string``
      - No
 
 ```
