@@ -45,6 +45,7 @@ from suite.resources_utils import (
     delete_service,
     replace_configmap_from_yaml,
     delete_testing_namespaces,
+    get_first_pod_name,
 )
 from suite.resources_utils import (
     create_ingress_controller,
@@ -742,18 +743,23 @@ class TransportServerSetup:
         namespace (str):
     """
 
-    def __init__(self, name, namespace):
+    def __init__(self, name, namespace, ingress_pod_name, ic_namespace, public_endpoint: PublicEndpoint):
         self.name = name
         self.namespace = namespace
+        self.ingress_pod_name = ingress_pod_name
+        self.ic_namespace = ic_namespace
+        self.public_endpoint = public_endpoint
 
 
 @pytest.fixture(scope="class")
 def transport_server_setup(
-        request, kube_apis, test_namespace
+        request, kube_apis, ingress_controller_prerequisites, test_namespace, ingress_controller_endpoint
 ) -> TransportServerSetup:
     """
     Prepare Transport Server Example.
 
+    :param ingress_controller_endpoint:
+    :param ingress_controller_prerequisites:
     :param request: internal pytest fixture to parametrize this method
     :param kube_apis: client apis
     :param test_namespace:
@@ -767,9 +773,9 @@ def transport_server_setup(
     global_config_file = f"{TEST_DATA}/{request.param['example']}/standard/global-configuration.yaml"
     gc_resource = create_gc_from_yaml(kube_apis.custom_objects, global_config_file, "nginx-ingress")
 
-    # deploy dns
-    dns_file = f"{TEST_DATA}/{request.param['example']}/standard/dns.yaml"
-    create_items_from_yaml(kube_apis, dns_file, test_namespace)
+    # deploy service_file
+    service_file = f"{TEST_DATA}/{request.param['example']}/standard/service.yaml"
+    create_items_from_yaml(kube_apis, service_file, test_namespace)
 
     # deploy transport server
     transport_server_file = f"{TEST_DATA}/{request.param['example']}/standard/transport-server.yaml"
@@ -780,12 +786,21 @@ def transport_server_setup(
     def fin():
         print("Clean up TransportServer Example:")
         delete_ts(kube_apis.custom_objects, ts_resource, test_namespace)
-        delete_items_from_yaml(kube_apis, dns_file, test_namespace)
+        delete_items_from_yaml(kube_apis, service_file, test_namespace)
         delete_gc(kube_apis.custom_objects, gc_resource, "nginx-ingress")
 
     request.addfinalizer(fin)
 
-    return TransportServerSetup(ts_resource['metadata']['name'], test_namespace)
+    ic_pod_name = get_first_pod_name(kube_apis.v1, ingress_controller_prerequisites.namespace)
+    ic_namespace = ingress_controller_prerequisites.namespace
+
+    return TransportServerSetup(
+        ts_resource['metadata']['name'],
+        test_namespace,
+        ic_pod_name,
+        ic_namespace,
+        ingress_controller_endpoint,
+    )
 
 
 @pytest.fixture(scope="class")

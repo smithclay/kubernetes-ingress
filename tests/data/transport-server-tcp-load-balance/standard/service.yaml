@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcp-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tcp-service
+  template:
+    metadata:
+      labels:
+        app: tcp-service
+    spec:
+      containers:
+        - name: tcp-service
+          image: tcp-server:latest
+          ports:
+            - containerPort: 3333
+              name: tcp-server
+              protocol: TCP
+          imagePullPolicy: Never
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcp-service
+spec:
+  selector:
+    app: tcp-service
+  ports:
+  - name: tcp-server
+    targetPort: 3333
+    port: 3333
+    protocol: TCP
