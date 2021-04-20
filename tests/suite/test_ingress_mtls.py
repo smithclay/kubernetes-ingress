@@ -1,13 +1,3 @@
-# import ssl, socket, OpenSSL
-# host = "virtual-server.example.com"
-# context = ssl.create_default_context()
-# context.check_hostname = False
-# context.verify_mode = ssl.CERT_NONE
-# conn = socket.create_connection((ip_address, port))
-# server_hostname = host if ssl.HAS_SNI else None
-# sock = context.wrap_socket(conn, server_hostname=server_hostname)
-# sock.settimeout(10)
-import ssl
 import pytest, requests, time
 from kubernetes.client.rest import ApiException
 from suite.resources_utils import (
@@ -17,7 +7,7 @@ from suite.resources_utils import (
     delete_secret,
     replace_secret,
 )
-from suite.ssl_utils import get_server_certificate_subject
+from suite.ssl_utils import get_server_certificate_subject, create_sni_session
 from suite.custom_resources_utils import (
     read_custom_resource,
     delete_virtual_server,
@@ -72,6 +62,7 @@ class TestIngressMtlsPolicies:
         """
             Test ingress-mtls with no token, valid token and invalid token
         """
+        session = create_sni_session()
         mtls_secret, tls_secret, pol_name = self.setup_single_policy(
             kube_apis, test_namespace, mtls_sec_valid_src, tls_sec_valid_src, mtls_pol_valid_src,
         )
@@ -88,7 +79,7 @@ class TestIngressMtlsPolicies:
         print(get_server_certificate_subject(virtual_server_setup.public_endpoint.public_ip,
                                 virtual_server_setup.vs_host,
                                 virtual_server_setup.public_endpoint.port_ssl))
-        resp1 = requests.get(
+        resp1 = session.get(
             virtual_server_setup.backend_1_url_ssl,
             cert = (crt, key),
             headers={"host": virtual_server_setup.vs_host},
