@@ -43,8 +43,9 @@ import (
 var (
 
 	// Set during build
-	version   string
-	gitCommit string
+	version string
+	commit  string
+	date    string
 
 	healthStatus = flag.Bool("health-status", false,
 		`Add a location based on the value of health-status-uri to the default server. The location responds with the 200 status code for any request.
@@ -91,9 +92,9 @@ var (
 
 	defaultServerSecret = flag.String("default-server-tls-secret", "",
 		`A Secret with a TLS certificate and key for TLS termination of the default server. Format: <namespace>/<name>.
-	If not set, than the certificate and key in the file "/etc/nginx/secrets/default" are used. 
+	If not set, than the certificate and key in the file "/etc/nginx/secrets/default" are used.
 	If "/etc/nginx/secrets/default" doesn't exist, the Ingress Controller will configure NGINX to reject TLS connections to the default server.
-	If a secret is set, but the Ingress controller is not able to fetch it from Kubernetes API or it is not set and the Ingress Controller 
+	If a secret is set, but the Ingress controller is not able to fetch it from Kubernetes API or it is not set and the Ingress Controller
 	fails to read the file "/etc/nginx/secrets/default", the Ingress controller will fail to start.`)
 
 	versionFlag = flag.Bool("version", false, "Print the version and git-commit hash and exit")
@@ -195,7 +196,7 @@ func main() {
 	}
 
 	if *versionFlag {
-		fmt.Printf("Version=%v GitCommit=%v\n", version, gitCommit)
+		fmt.Printf("Version=%v GitCommit=%v Date=%v\n", version, commit, date)
 		os.Exit(0)
 	}
 
@@ -254,7 +255,7 @@ func main() {
 		glog.Fatal("ingresslink and external-service cannot both be set")
 	}
 
-	glog.Infof("Starting NGINX Ingress controller Version=%v GitCommit=%v PlusFlag=%v\n", version, gitCommit, *nginxPlus)
+	glog.Infof("Starting NGINX Ingress controller Version=%v GitCommit=%v Date=%v PlusFlag=%v\n", version, commit, date, *nginxPlus)
 
 	var config *rest.Config
 	if *proxyURL != "" {
