@@ -2,7 +2,7 @@
 ARG BUILD_OS=debian
 
 ############################################# Base image for Debian #############################################
-FROM nginx:1.19.9 AS debian
+FROM nginx:1.19.10 AS debian
 ARG IC_VERSION
 
 LABEL version=debian-nginx-$NGINX_VERSION-$IC_VERSION
@@ -14,7 +14,7 @@ RUN apt-get update \
 
 
 ############################################# Base image for Alpine #############################################
-FROM nginx:1.19.9-alpine AS alpine
+FROM nginx:1.19.10 AS alpine
 ARG IC_VERSION
 
 LABEL version=alpine-nginx-$NGINX_VERSION-$IC_VERSION
