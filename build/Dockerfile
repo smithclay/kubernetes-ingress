@@ -177,6 +177,8 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 
 COPY --chown=nginx:0 internal/configs/oidc/* /etc/nginx/oidc/
 
+############################################# Build image for Opentracing Builder #############################################
+FROM ghcr.io/lightstep/lightstep-partner-toolkit-otel-nginx:latest as opentelemetry-builder
 
 ############################################# Build image for Opentracing Builder #############################################
 FROM debian as opentracing-builder
@@ -230,6 +232,14 @@ RUN set -x \
 	&& apt-get install --no-install-recommends --no-install-suggests -y ca-certificates apt-transport-https wget \
 	&& wget https://github.com/jaegertracing/jaeger-client-cpp/releases/download/${JAEGER_VERSION}/libjaegertracing_plugin.linux_amd64.so -O /usr/local/lib/libjaegertracing_plugin.so
 
+############################################# Build image for Opentelemetry #############################################
+FROM debian as opentelemetry
+ARG OPENTELEMETRY_VERSION=0.0.1
+ARG IC_VERSION
+
+LABEL version=debian-nginx-opentracing-$NGINX_VERSION-$IC_VERSION
+
+COPY --from=opentelemetry-builder /usr/share/nginx/modules/otel_ngx_module.so /usr/lib/nginx/modules/otel_ngx_module.so
 
 ############################################# Build image for Opentracing #############################################
 FROM debian as opentracing

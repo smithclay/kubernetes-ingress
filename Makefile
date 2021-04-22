@@ -85,6 +85,10 @@ openshift-image-nap-plus: build ## Create Docker image for Ingress Controller (o
 debian-image-opentracing: build ## Create Docker image for Ingress Controller (with opentracing)
 	$(DOCKER_CMD) --build-arg BUILD_OS=opentracing
 
+.PHONY: debian-image-opentelemetry
+debian-image-opentelemetry: build ## Create Docker image for Ingress Controller (with opentelemetry)
+	$(DOCKER_CMD) --build-arg BUILD_OS=opentelemetry
+
 .PHONY: debian-image-opentracing-plus
 debian-image-opentracing-plus: build ## Create Docker image for Ingress Controller (with opentracing and plus)
 	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=opentracing-plus
