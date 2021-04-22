@@ -25,7 +25,7 @@ from suite.resources_utils import (
     get_file_contents,
 )
 from suite.custom_resources_utils import (
-    read_ap_crd,
+    read_ap_custom_resource,
     create_crd_from_yaml,
     delete_crd,
     create_ap_usersig_from_yaml,
@@ -37,7 +37,7 @@ from suite.yaml_utils import get_first_ingress_host_from_yaml, get_name_from_yam
 src_ing_yaml = f"{TEST_DATA}/appprotect/appprotect-ingress.yaml"
 ap_policy = "dataguard-alarm"
 ap_policy_uds = "dataguard-alarm-uds"
-uds_crd = f"{DEPLOYMENTS}/common/crds-v1beta1/appprotect.f5.com_apusersigs.yaml"
+uds_crd = f"{DEPLOYMENTS}/common/crds/appprotect.f5.com_apusersigs.yaml"
 uds_crd_resource = f"{TEST_DATA}/appprotect/ap-ic-uds.yaml"
 valid_resp_addr = "Server address:"
 valid_resp_name = "Server name:"
@@ -188,7 +188,7 @@ class TestAppProtect:
 
         print("--------- Run test while AppProtect module is enabled with correct policy ---------")
 
-        ap_crd_info = read_ap_crd(kube_apis.custom_objects, test_namespace, "appolicies", ap_policy)
+        ap_crd_info = read_ap_custom_resource(kube_apis.custom_objects, test_namespace, "appolicies", ap_policy)
         assert_ap_crd_info(ap_crd_info, ap_policy)
         wait_before_test(40)
         ensure_response_from_backend(appprotect_setup.req_url, ingress_host)
@@ -216,7 +216,7 @@ class TestAppProtect:
             "--------- Run test while AppProtect module is disabled with correct policy ---------"
         )
 
-        ap_crd_info = read_ap_crd(kube_apis.custom_objects, test_namespace, "appolicies", ap_policy)
+        ap_crd_info = read_ap_custom_resource(kube_apis.custom_objects, test_namespace, "appolicies", ap_policy)
         assert_ap_crd_info(ap_crd_info, ap_policy)
         wait_before_test(40)
         ensure_response_from_backend(appprotect_setup.req_url, ingress_host)
@@ -390,7 +390,7 @@ class TestAppProtect:
             "--------- Run test while AppProtect module is enabled with correct policy and UDS ---------"
         )
 
-        ap_crd_info = read_ap_crd(kube_apis.custom_objects, test_namespace, "appolicies", ap_policy)
+        ap_crd_info = read_ap_custom_resource(kube_apis.custom_objects, test_namespace, "appolicies", ap_policy)
         assert_ap_crd_info(ap_crd_info, ap_policy)
         wait_before_test(120)
 
