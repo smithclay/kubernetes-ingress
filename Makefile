@@ -89,6 +89,10 @@ debian-image-opentracing: build ## Create Docker image for Ingress Controller (w
 debian-image-opentelemetry: build ## Create Docker image for Ingress Controller (with opentelemetry)
 	$(DOCKER_CMD) --build-arg BUILD_OS=opentelemetry
 
+.PHONY: debian-image-opentelemetry-plus
+debian-image-opentelemetry-plus: build ## Create Docker image for Ingress Controller (with opentracing and plus)
+	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=opentelemetry-plus
+
 .PHONY: debian-image-opentracing-plus
 debian-image-opentracing-plus: build ## Create Docker image for Ingress Controller (with opentracing and plus)
 	$(DOCKER_CMD) $(PLUS_ARGS) --build-arg BUILD_OS=opentracing-plus

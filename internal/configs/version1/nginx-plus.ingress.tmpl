@@ -153,6 +153,10 @@ server {
 		set $resource_name "{{$location.MinionIngress.Name}}";
 		set $resource_namespace "{{$location.MinionIngress.Namespace}}";
 		{{end}}
+		opentelemetry_operation_name "{{$location.ServiceName}}";
+		opentelemetry_propagate b3;
+		opentelemetry_attribute "kubernetes.service.ingress" "nginx";
+		opentelemetry_attribute "nginx.service.name" "{{$location.ServiceName}}";
 		{{if $location.GRPC}}
 		{{if not $server.GRPCOnly}}
 		error_page 400 @grpcerror400;

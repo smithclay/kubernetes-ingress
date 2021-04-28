@@ -89,8 +89,9 @@ server {
 
 	{{range $location := $server.Locations}}
 	location {{$location.Path}} {
-	  opentelemetry_operation_name "{{$location.ServiceName}}";
-    opentelemetry_propagate b3;
+		opentelemetry_operation_name "{{$location.ServiceName}}";
+		opentelemetry_propagate b3;
+		opentelemetry_attribute "kubernetes.service.ingress" "nginx";
 		opentelemetry_attribute "nginx.service.name" "{{$location.ServiceName}}";
 
 		set $service "{{$location.ServiceName}}"; 

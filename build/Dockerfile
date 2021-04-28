@@ -177,7 +177,88 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 
 COPY --chown=nginx:0 internal/configs/oidc/* /etc/nginx/oidc/
 
-############################################# Build image for Opentracing Builder #############################################
+############################################# Build image for Opentelemetry Builder (nginx plus) #############################################
+FROM debian-plus as opentelemetry-builder-plus
+
+RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
+	--mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
+	set -x \
+	&& apt-get update \
+	&& apt-get install --no-install-recommends --no-install-suggests -y \
+	autoconf \
+	automake \
+	build-essential \
+	cmake \
+	git \
+	libcurl4-openssl-dev \
+	libgeoip-dev \
+	liblmdb-dev \
+	libpcre3-dev \
+	libprotobuf-dev \
+	libssl-dev \
+	libtool \
+	libxml2-dev \
+	libyajl-dev \
+	pkgconf \
+	protobuf-compiler \
+	zlib1g-dev \
+	ca-certificates \
+	gcc \
+	g++ \
+	gnupg2 \
+	lsb-release \
+	curl \
+	apt-transport-https \
+	software-properties-common
+
+RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.36.4 \
+  https://github.com/grpc/grpc \
+  && cd grpc \
+  && mkdir -p cmake/build \
+  && cd cmake/build \
+  && cmake \
+    -DgRPC_INSTALL=ON \
+    -DgRPC_BUILD_TESTS=OFF \
+    -DCMAKE_INSTALL_PREFIX=/install \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+    ../.. \
+  && make -j2 \
+  && make install
+
+RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v0.3.0 \
+  https://github.com/open-telemetry/opentelemetry-cpp.git \
+  && cd opentelemetry-cpp \
+  && mkdir build \
+  && cd build \
+  && cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/install \
+    -DCMAKE_PREFIX_PATH=/install \
+    -DWITH_OTLP=ON \
+    -DBUILD_TESTING=OFF \
+    -DWITH_EXAMPLES=OFF \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    .. \
+  && make -j2 \
+  && make install
+
+RUN git clone --depth 1 https://github.com/open-telemetry/opentelemetry-cpp-contrib.git
+
+RUN mkdir -p opentelemetry-cpp-contrib/instrumentation/nginx/build
+RUN cd opentelemetry-cpp-contrib/instrumentation/nginx/build \
+  && cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_PREFIX_PATH=/install \
+    -DCMAKE_INSTALL_PREFIX=/usr/share/nginx/modules \
+    .. \
+  && make -j2 \
+  && make install
+
+############################################# Build image for Opentelemetry Builder #############################################
 FROM debian as opentelemetry-builder
 
 RUN apt-get update && apt-get install -y -q --fix-missing --no-install-recommends \
@@ -198,9 +279,9 @@ RUN apt-get update && apt-get install -y -q --fix-missing --no-install-recommend
 	pkgconf \
 	protobuf-compiler \
 	zlib1g-dev \
- 	ca-certificates \
-  gcc \
-  g++ \
+	ca-certificates \
+	gcc \
+	g++ \
 	gnupg2 \
 	lsb-release \
 	curl \
@@ -315,7 +396,7 @@ FROM debian as opentelemetry
 ARG OPENTELEMETRY_VERSION=0.0.1
 ARG IC_VERSION
 
-LABEL version=debian-nginx-opentracing-$NGINX_VERSION-$IC_VERSION
+LABEL version=debian-nginx-opentelemetry-$NGINX_VERSION-$IC_VERSION
 
 COPY --from=opentelemetry-builder /usr/share/nginx/modules/otel_ngx_module.so /usr/lib/nginx/modules/otel_ngx_module.so
 
@@ -332,6 +413,17 @@ COPY --from=tracer-downloader /usr/local/lib/libjaegertracing_plugin.so /usr/loc
 
 RUN ldconfig
 
+############################################# Build image for Opentelemetry with NGINX Plus #############################################
+FROM debian-plus as opentelemetry-plus
+ARG IC_VERSION
+
+LABEL version=debian-nginx-plus-opentelemetry-$NGINX_PLUS_VERSION-$IC_VERSION
+
+RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode=0644 \
+	--mount=type=secret,id=nginx-repo.key,dst=/etc/ssl/nginx/nginx-repo.key,mode=0644 \
+	apt-get update
+
+COPY --from=opentelemetry-builder-plus /usr/share/nginx/modules/otel_ngx_module.so /usr/lib/nginx/modules/otel_ngx_module.so
 
 ############################################# Build image for Opentracing with NGINX Plus #############################################
 FROM debian-plus as opentracing-plus
