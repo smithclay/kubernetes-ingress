@@ -178,7 +178,85 @@ RUN --mount=type=secret,id=nginx-repo.crt,dst=/etc/ssl/nginx/nginx-repo.crt,mode
 COPY --chown=nginx:0 internal/configs/oidc/* /etc/nginx/oidc/
 
 ############################################# Build image for Opentracing Builder #############################################
-FROM ghcr.io/lightstep/lightstep-partner-toolkit-otel-nginx:latest as opentelemetry-builder
+FROM debian as opentelemetry-builder
+
+RUN apt-get update && apt-get install -y -q --fix-missing --no-install-recommends \
+	autoconf \
+	automake \
+	build-essential \
+	cmake \
+	git \
+	libcurl4-openssl-dev \
+	libgeoip-dev \
+	liblmdb-dev \
+	libpcre3-dev \
+	libprotobuf-dev \
+	libssl-dev \
+	libtool \
+	libxml2-dev \
+	libyajl-dev \
+	pkgconf \
+	protobuf-compiler \
+	zlib1g-dev \
+ 	ca-certificates \
+  gcc \
+  g++ \
+	gnupg2 \
+	lsb-release \
+	curl \
+	apt-transport-https \
+	software-properties-common
+
+# Get nginx to build against
+RUN curl -sS -O -L http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
+	tar zxvf nginx-${NGINX_VERSION}.tar.gz && rm -f nginx-${NGINX_VERSION}.tar.gz
+
+RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.36.4 \
+  https://github.com/grpc/grpc \
+  && cd grpc \
+  && mkdir -p cmake/build \
+  && cd cmake/build \
+  && cmake \
+    -DgRPC_INSTALL=ON \
+    -DgRPC_BUILD_TESTS=OFF \
+    -DCMAKE_INSTALL_PREFIX=/install \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+    -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+    ../.. \
+  && make -j2 \
+  && make install
+
+RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v0.3.0 \
+  https://github.com/open-telemetry/opentelemetry-cpp.git \
+  && cd opentelemetry-cpp \
+  && mkdir build \
+  && cd build \
+  && cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/install \
+    -DCMAKE_PREFIX_PATH=/install \
+    -DWITH_OTLP=ON \
+    -DBUILD_TESTING=OFF \
+    -DWITH_EXAMPLES=OFF \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    .. \
+  && make -j2 \
+  && make install
+
+RUN git clone --depth 1 https://github.com/open-telemetry/opentelemetry-cpp-contrib.git
+
+RUN mkdir -p opentelemetry-cpp-contrib/instrumentation/nginx/build
+RUN cd opentelemetry-cpp-contrib/instrumentation/nginx/build \
+  && cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_PREFIX_PATH=/install \
+    -DCMAKE_INSTALL_PREFIX=/usr/share/nginx/modules \
+    .. \
+  && make -j2 \
+  && make install
 
 ############################################# Build image for Opentracing Builder #############################################
 FROM debian as opentracing-builder

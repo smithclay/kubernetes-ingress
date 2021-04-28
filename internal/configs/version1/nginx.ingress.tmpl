@@ -89,6 +89,10 @@ server {
 
 	{{range $location := $server.Locations}}
 	location {{$location.Path}} {
+	  opentelemetry_operation_name "{{$location.ServiceName}}";
+    opentelemetry_propagate b3;
+		opentelemetry_attribute "nginx.service.name" "{{$location.ServiceName}}";
+
 		set $service "{{$location.ServiceName}}"; 
 		{{with $location.MinionIngress}}
 		# location for minion {{$location.MinionIngress.Namespace}}/{{$location.MinionIngress.Name}}
